@@ -29,7 +29,7 @@ revoke all on public.skin_selections from public, anon, authenticated;
 grant select on public.skin_selections to anon, authenticated;
 -- Mutations use narrow RPC functions and an explicit server-side owner check.
 create function public.is_vault_owner() returns boolean
-language sql stable security definer set search_path = '' as $$ select private.is_owner(); $$;
+language sql stable security invoker set search_path = '' as $$ select private.is_owner(); $$;
 create function public.set_skin_selection(p_skin_id uuid,p_owned boolean,p_wished boolean) returns void
 language plpgsql security definer set search_path = '' as $$
 begin
@@ -54,4 +54,10 @@ revoke all on function public.set_skin_price(uuid,integer) from public, anon, au
 grant execute on function public.is_vault_owner() to authenticated;
 grant execute on function public.set_skin_selection(uuid,boolean,boolean) to authenticated;
 grant execute on function public.set_skin_price(uuid,integer) to authenticated;
+-- Dashboard's automatic RLS trigger is an internal operation only.
+do $$ begin
+ if to_regprocedure('public.rls_auto_enable()') is not null then
+  execute 'revoke execute on function public.rls_auto_enable() from public, anon, authenticated';
+ end if;
+end $$;
 commit;
