@@ -1,0 +1,3 @@
+import {useEffect,useState} from 'react';
+export function useLocalState<T>(key:string,initial:T,validate:(x:unknown)=>x is T){key=(import.meta.env.VITE_DEMO==='true'?'demo-':'')+key;const [state,setState]=useState<T>(()=>{try{const x=JSON.parse(localStorage.getItem(key)||'null');return validate(x)?x:initial;}catch{return initial;}});const [storageError,setError]=useState(false);useEffect(()=>{try{localStorage.setItem(key,JSON.stringify(state));setError(false);}catch{setError(true);}},[key,state]);return [state,setState,storageError] as const;}
+export const validIds=(x:unknown):x is string[]=>Array.isArray(x)&&x.every(s=>typeof s==='string');
