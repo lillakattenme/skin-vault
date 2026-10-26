@@ -39,3 +39,31 @@ test('drag scroll continues without pointer movement and cleans up on drop',()=>
  listeners.get('dragover')({clientY:450,preventDefault(){}});callback(48);assert.equal(moves.length,2);
  listeners.get('drop')();assert.equal(listeners.size,0);assert.equal(cancelled,1);callback(64);assert.equal(moves.length,2);
 });
+
+const {drawWithoutRepeats,rememberDraw,validHistory,makeReel,randomIndex}=await import(path.join(temp,'roulette-model.mjs'));
+test('all 20 Vandals appear once per cycle, including after reloading saved history',()=>{
+ const ids=Array.from({length:20},(_,i)=>'vandal-'+i);let history={};let last=null;
+ for(let cycle=0;cycle<4;cycle++){
+ const wins=[];for(let i=0;i<20;i++){
+  const draw=drawWithoutRepeats([...ids].reverse(),history.owned,n=>n-1);
+  if(i===0&&last)assert.notEqual(draw.winner,last);
+  wins.push(draw.winner);last=draw.winner;history=JSON.parse(JSON.stringify(rememberDraw(history,'owned',draw.bag)));
+  assert.ok(validHistory(history));
+ }
+ assert.equal(new Set(wins).size,20);assert.deepEqual([...wins].sort(),[...ids].sort());
+ }
+});
+test('pool changes discard stale IDs, one-skin and empty pools behave explicitly',()=>{
+ const a=drawWithoutRepeats(['a','b'],undefined,()=>0);
+ const b=drawWithoutRepeats(['c','d'],a.bag,()=>0);assert.ok(['c','d'].includes(b.winner));assert.ok(b.bag.remaining.every(id=>['c','d'].includes(id)));
+ assert.equal(drawWithoutRepeats(['a'],a.bag).winner,'a');assert.throws(()=>drawWithoutRepeats([]));assert.throws(()=>randomIndex(0));
+});
+test('weapon/source histories are independent, bounded and reject corrupted saved queues',()=>{
+ const a=drawWithoutRepeats(['a','b']);let history=rememberDraw({},'owner-vandal',a.bag);history=rememberDraw(history,'viewer-phantom',drawWithoutRepeats(['c','d']).bag);assert.deepEqual(history['owner-vandal'],a.bag);
+ for(let i=0;i<30;i++)history=rememberDraw(history,String(i),a.bag);assert.equal(Object.keys(history).length,24);
+ assert.equal(validHistory({x:{pool:['a'],remaining:['missing'],last:null}}),false);assert.equal(validHistory({x:{pool:['a'],remaining:['a','a'],last:null}}),false);
+});
+test('new-cycle boundary avoids an immediate repeat and reel lands on the chosen skin',()=>{
+ const draw=drawWithoutRepeats(['a','b','c'],{pool:['a','b','c'],remaining:[],last:'a'},n=>n-1);assert.notEqual(draw.winner,'a');
+ const pool=[{id:'a'},{id:'b'}],winner=pool[1],reel=makeReel(pool,winner);assert.equal(reel.length,36);assert.equal(reel[32],winner);assert.ok(reel.every(s=>pool.includes(s)));
+});
