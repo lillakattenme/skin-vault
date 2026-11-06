@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#110e1d">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Lilla Plan">
+  <meta name="description" content="Личный календарь стримов, заметок и идей с чек-листами">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <link rel="manifest" href="manifest.webmanifest">
+  <title>Lilla Plan — стримы, идеи и заметки</title>
+  <style>
+    :root{
+      color-scheme:dark;--bg:#100e1b;--panel:#1d192b;--panel2:#262034;--text:#f8f4ff;--muted:#aaa3bc;
+      --pink:#ff88b9;--purple:#bda2ff;--mint:#8ce3d0;--border:rgba(255,255,255,.085);
+      --radius:22px;--shadow:0 18px 50px rgba(0,0,0,.18)
+    }
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html{min-height:100%;background:var(--bg)}
+    body{margin:0;min-height:100svh;background:radial-gradient(ellipse 75% 32% at 95% 0%,#40244866 0%,transparent 100%),radial-gradient(ellipse 55% 35% at 0% 42%,#27224a55 0%,transparent 100%),var(--bg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;color:var(--text);font-size:15px;line-height:1.45;overscroll-behavior-y:contain}
+    body:before{content:"";pointer-events:none;position:fixed;inset:0;opacity:.22;background-image:radial-gradient(#e5d4ff 0.7px,transparent 1px);background-size:41px 47px;mask-image:linear-gradient(to bottom,#000,transparent 68%)}
+    button,input,textarea,select{font:inherit}
+    button{cursor:pointer}
+    .app{max-width:650px;margin:0 auto;position:relative;min-height:100svh;padding:calc(env(safe-area-inset-top) + 20px) 19px calc(env(safe-area-inset-bottom) + 116px)}
+    .top{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:23px}
+    .brand{display:flex;align-items:center;gap:11px}
+    .brand-mark{width:47px;height:47px;display:grid;place-items:center;border-radius:17px;background:linear-gradient(135deg,#e9a2d4,#ab9aff);font-size:22px;box-shadow:0 10px 26px #cf7fc333}
+    .brand strong{font-size:19px;font-weight:760;letter-spacing:-.6px;display:block;line-height:1.15}
+    .brand small{display:block;margin-top:4px;color:var(--muted);font-size:12px}
+    .icon-btn{width:43px;height:43px;border-radius:14px;background:#292238d9;border:1px solid var(--border);color:var(--text);display:grid;place-items:center;font-size:20px}
+    .greeting{margin-bottom:22px}
+    .eyebrow{text-transform:uppercase;letter-spacing:2px;font-size:10px;color:var(--pink);font-weight:750;margin:0 0 6px}
+    h1{margin:0;font-size:31px;letter-spacing:-1.1px;line-height:1.1;font-weight:790}
+    .subtitle{color:var(--muted);margin:10px 0 0;font-size:13px}
+    .stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+    .stat{background:linear-gradient(135deg,#2d213a,#211c30);border:1px solid var(--border);border-radius:21px;padding:17px;position:relative;overflow:hidden}
+    .stat:nth-child(2){background:linear-gradient(135deg,#24203a,#1c1b2d)}
+    .stat:after{content:"✦";position:absolute;right:13px;top:8px;color:#fff2;font-size:31px}
+    .stat-num{font-size:30px;font-weight:800;letter-spacing:-1.4px;display:block;line-height:1}
+    .stat-label{font-size:12px;color:#c9c1d3;margin-top:9px}
+    .section-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:25px 0 13px}
+    h2{font-size:17px;line-height:1.25;letter-spacing:-.3px;margin:0;font-weight:750}
+    .text-btn{color:var(--pink);background:none;border:0;padding:6px 0;font-size:12px;font-weight:710}
+    .card{background:linear-gradient(145deg,#242031ee,#1b1928ed);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}
+    .event-card{display:flex;gap:13px;align-items:center;padding:15px;text-align:left;width:100%;color:var(--text);margin-bottom:10px}
+    .date-pill{min-width:52px;height:55px;border-radius:15px;background:#38243f;display:flex;flex-direction:column;align-items:center;justify-content:center}
+    .date-pill .d{font-size:21px;font-weight:800;line-height:1.1}
+    .date-pill .m{font-size:10px;color:#f3afcc;text-transform:uppercase;font-weight:800}
+    .event-copy{min-width:0;flex:1}.event-title{font-size:15px;font-weight:740;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+    .event-meta{margin-top:5px;color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .chevron{color:#8c839d;font-size:20px}
+    .pill{display:inline-flex;align-items:center;gap:6px;background:#3e304c;color:#eac4f4;border-radius:99px;font-size:11px;padding:5px 9px;font-weight:750}
+    .pill.mint{color:var(--mint);background:#183c35}.pill.gray{color:#b7b2c0;background:#33303d}
+    .note-card{position:relative;background:linear-gradient(145deg,#30283c,#252030);padding:17px;border:1px solid var(--border);border-radius:20px;text-align:left;color:var(--text);width:100%;display:block;margin-bottom:10px}
+    .note-card:before{content:"";width:3px;position:absolute;inset:17px auto 17px 0;border-radius:3px;background:var(--purple)}
+    .note-heading{font-weight:750;font-size:15px;display:flex;align-items:center;gap:6px}
+    .note-preview{font-size:12px;line-height:1.5;color:#c6bed2;margin:7px 0 0;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;white-space:pre-wrap;overflow-wrap:anywhere}
+    .note-footer{display:flex;gap:7px;align-items:center;margin-top:12px;color:#a9a1b9;font-size:11px}
+    .empty{border:1px dashed #675775;border-radius:20px;padding:24px 20px;text-align:center;background:#211b2e88}
+    .empty-icon{font-size:30px;display:block;margin-bottom:6px}.empty strong{display:block;font-size:14px;margin-bottom:5px}
+    .empty p{color:var(--muted);font-size:12px;line-height:1.6;margin:0 auto 13px;max-width:240px}
+    .empty button{border:1px solid #715174;border-radius:12px;background:#40273c;color:#ffc7df;font-weight:750;padding:10px 15px;font-size:12px}
+    .bottom{position:fixed;z-index:20;bottom:0;left:0;right:0;padding:10px 17px calc(env(safe-area-inset-bottom) + 10px);background:linear-gradient(0deg,#110e1d 60%,#110e1d00);pointer-events:none}
+    .bottom-inner{pointer-events:auto;max-width:620px;margin:0 auto;padding:8px 7px;display:grid;grid-template-columns:1fr 1fr 54px 1fr 1fr;gap:3px;align-items:center;background:#2b2538f5;border-radius:25px;border:1px solid #5b4b6744;box-shadow:0 10px 38px #0008;backdrop-filter:blur(22px)}
+    .nav{display:flex;align-items:center;flex-direction:column;gap:3px;padding:7px 2px;background:none;border:0;border-radius:14px;color:#a9a0b8;font-size:10px;font-weight:650}
+    .nav .nav-icon{font-size:20px;line-height:1.3}.nav.active{color:#ffacd0;background:#4b344f}
+    .add{width:50px;height:50px;border-radius:18px;border:0;background:linear-gradient(135deg,#ff94bc,#bb9ef9);font-size:31px;line-height:1;color:#251329;font-weight:400;box-shadow:0 7px 18px #ee91c74d}
+    .idea-card{padding:16px;margin:0 0 12px;background:linear-gradient(135deg,#302239ee,#201c2eee)}
+    .idea-top{display:flex;align-items:flex-start;gap:11px}
+    .idea-symbol{width:43px;height:43px;border-radius:14px;display:grid;place-items:center;flex-shrink:0;background:#503449;font-size:22px}
+    .idea-info{min-width:0;flex:1}.idea-title{font-size:15px;font-weight:780;line-height:1.35;overflow-wrap:anywhere}
+    .idea-sub{color:#c9b8d6;font-size:11px;margin-top:5px}.idea-desc{font-size:12px;line-height:1.55;color:#cfc6d9;white-space:pre-wrap;overflow-wrap:anywhere;margin:12px 0}
+    .idea-progress{display:flex;align-items:center;justify-content:space-between;gap:8px;color:#bbb0cc;font-size:11px;margin:14px 0 7px}
+    .progress-track{width:100%;height:6px;border-radius:99px;background:#4d3b58;overflow:hidden}.progress-fill{height:100%;background:linear-gradient(90deg,#ff98c0,#c3a5ff);border-radius:99px;transition:width .2s}
+    .checklist{display:flex;flex-direction:column;gap:5px;margin-top:12px}.check-item{display:flex;gap:10px;align-items:center;padding:10px;border-radius:11px;background:#ffffff09;border:1px solid #ffffff0e;color:#e6ddec;font-size:12px;overflow-wrap:anywhere;line-height:1.35}
+    .check-item input{width:18px;height:18px;accent-color:#d8a4ed;flex-shrink:0;margin:0}.check-item.checked span{text-decoration:line-through;color:#978da9}
+    .idea-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}.idea-action{border-radius:12px;padding:11px 6px;border:1px solid #66516e;background:#392b47;color:#ead2ee;font-size:12px;font-weight:760}
+    .idea-action.schedule{border-color:#d9a1d1;background:linear-gradient(120deg,#e8a3d0,#baa0f4);color:#25162e}
+    .scheduled-link{display:flex;align-items:center;justify-content:space-between;background:#23413970;border:1px solid #497d6866;color:#a8f1da;border-radius:11px;padding:10px 11px;margin-top:12px;width:100%;font-size:12px;text-align:left}
+    .idea-hint{padding:12px 13px;border:1px dashed #78648d;border-radius:13px;color:#bdabc9;background:#2a2338;font-size:12px;line-height:1.5;margin-bottom:15px}
+    .idea-teaser{display:flex;align-items:center;gap:12px;text-align:left;color:#f4e9fb;width:100%;padding:15px;margin-bottom:9px}
+    .idea-teaser .idea-symbol{width:37px;height:37px;font-size:20px}
+    .idea-teaser strong{font-size:13px;display:block}.idea-teaser small{color:#baadcb;font-size:11px;display:block;margin-top:2px}
+    .calendar{padding:14px 10px 16px;margin-top:15px}
+    .calendar-top{display:flex;align-items:center;justify-content:space-between;padding:4px 6px 15px}
+    .calendar-month{font-weight:750;font-size:17px;letter-spacing:-.3px;text-transform:capitalize}
+    .month-actions{display:flex;align-items:center;gap:5px}.month-arrow{background:#383045;border:0;color:white;border-radius:11px;width:35px;height:35px;font-size:23px;display:grid;place-items:center}
+    .weekdays,.days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+    .weekdays span{text-align:center;color:#a99fba;font-size:10px;font-weight:750;padding:7px 0}
+    .day{background:transparent;border:1px solid transparent;color:#eee8f8;min-width:0;aspect-ratio:1 / 1.16;border-radius:13px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;font-size:13px;position:relative}
+    .day.other{color:#6c647b}.day.today:before{content:"";position:absolute;inset:2px;border:1px solid #a87ba2;border-radius:12px}.day.selected{background:#ae7ab5;color:#1b1124;font-weight:800}.day.selected.today:before{border-color:#fff8}
+    .dots{height:5px;display:flex;gap:3px;align-items:center}.dot{display:block;background:var(--pink);width:4px;height:4px;border-radius:50%}.dot.note{background:var(--purple)}.day.selected .dot{background:#23152c}
+    .date-line{font-size:13px;color:var(--muted);text-transform:capitalize}
+    .day-events{margin-top:8px}.day-event{width:100%;padding:13px 14px;display:flex;gap:10px;align-items:center;text-align:left;color:var(--text);margin-bottom:9px}
+    .time-tag{min-width:50px;color:#ffb6d4;font-size:13px;font-weight:740}.day-event-body{flex:1;min-width:0}.day-event-body strong{display:block;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.day-event-body small{display:block;font-size:11px;color:var(--muted);margin-top:3px}
+    .day-note{width:100%;display:flex;gap:9px;align-items:center;text-align:left;color:var(--text);padding:13px;margin-bottom:9px;font-size:13px;font-weight:680}
+    .toolbar{display:flex;gap:10px;align-items:center;margin-top:18px;margin-bottom:14px}
+    .search{min-width:0;flex:1;background:#262032;border:1px solid var(--border);color:white;border-radius:15px;outline:none;padding:13px 15px;font-size:14px}
+    .search:focus,.field input:focus,.field textarea:focus,.field select:focus{border-color:#c393e1;box-shadow:0 0 0 3px #c393e11c}
+    .chips{display:flex;gap:8px;overflow:auto;padding-bottom:8px;scrollbar-width:none}.chips::-webkit-scrollbar{display:none}
+    .chip{flex:none;padding:9px 13px;border-radius:99px;background:#30283f;border:1px solid var(--border);color:#c1b8d0;font-size:12px;font-weight:740}.chip.selected{background:#d5a1d7;color:#271729;border-color:#d5a1d7}
+    .settings-title{font-size:14px;font-weight:750;margin:0 0 8px}.settings-row{padding:15px;margin:10px 0}.settings-row p{font-size:12px;color:var(--muted);line-height:1.55;margin:5px 0 12px}
+    .outlined{background:#35293e;border:1px solid #65506b;border-radius:13px;padding:11px 14px;color:#f0c8ee;font-size:12px;font-weight:750}
+    .danger{color:#ff9ba5}.settings-actions{display:flex;gap:8px;flex-wrap:wrap}.file-input{display:none}
+    .overlay{position:fixed;z-index:80;inset:0;background:#0a0813bc;display:none;align-items:flex-end;justify-content:center;backdrop-filter:blur(6px)}.overlay.open{display:flex}
+    .sheet{width:100%;max-width:650px;background:linear-gradient(175deg,#31263d,#1b1829 45%);border:1px solid #79628750;border-bottom:none;border-radius:28px 28px 0 0;max-height:calc(100svh - env(safe-area-inset-top) - 16px);display:flex;flex-direction:column;box-shadow:0 -18px 65px #0009;animation:up .22s ease-out}
+    @keyframes up{from{transform:translateY(15px);opacity:.6}to{transform:translateY(0);opacity:1}}
+    .sheet-head{padding:19px 20px 15px;display:flex;justify-content:space-between;gap:12px;align-items:center;border-bottom:1px solid #ffffff13}
+    .sheet-head h2{font-size:19px}.sheet-scroll{padding:18px 20px calc(env(safe-area-inset-bottom) + 20px);overflow:auto}
+    .choice{width:100%;display:flex;align-items:center;gap:14px;background:#342a42;border:1px solid #53415d;border-radius:18px;color:#fff;padding:16px;text-align:left;margin-bottom:10px}.choice-icon{width:47px;height:47px;border-radius:14px;background:#533047;display:grid;place-items:center;font-size:24px}.choice:nth-child(2) .choice-icon{background:#40345b}.choice strong{display:block;font-size:15px}.choice small{display:block;color:var(--muted);margin-top:3px;font-size:12px}
+    .field{margin-bottom:15px}.field label{display:block;font-size:12px;font-weight:750;color:#ddd3ec;margin-bottom:7px}
+    .field input,.field textarea,.field select{background:#2b2539;color:#f7f2ff;border:1px solid #56475e;border-radius:13px;padding:13px 14px;outline:none;width:100%;font-size:15px;min-height:47px}
+    .field textarea{resize:vertical;min-height:100px;line-height:1.5}.field input::placeholder,.field textarea::placeholder{color:#8e839f}
+    .fields-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.fields-2 .field{min-width:0}
+    .toggle-line{display:flex;align-items:center;gap:9px;font-size:13px;color:#d9d0e3;margin:10px 0 20px}.toggle-line input{accent-color:#dd9acc;width:18px;height:18px}
+    .form-actions{display:flex;gap:9px}.primary{flex:1;background:linear-gradient(135deg,#fba5cb,#c5a6ff);color:#26152e;border:0;border-radius:14px;padding:14px;font-weight:800}.delete{background:#512c42;border:1px solid #84475a;border-radius:14px;padding:13px 15px;color:#ffafbe;font-size:13px;font-weight:750}
+    .toast{position:fixed;z-index:150;bottom:calc(env(safe-area-inset-bottom) + 110px);left:50%;max-width:calc(100% - 32px);transform:translateX(-50%);background:#eac9ec;color:#28152e;padding:11px 17px;border-radius:15px;font-size:13px;font-weight:750;box-shadow:0 14px 35px #0007;opacity:0;pointer-events:none;transition:opacity .2s;white-space:nowrap}.toast.visible{opacity:1}
+    .tiny{font-size:11px;color:var(--muted)}
+    .small-add{font-size:12px;border:1px solid #6b536d;color:#f4bae2;border-radius:10px;padding:8px 10px;background:#39283b;font-weight:750}
+    @media(min-width:680px){.app{padding-top:45px}.bottom{padding-bottom:20px}.sheet{border-radius:27px;margin-bottom:25px;max-height:90svh;border-bottom:1px solid #79628750}.overlay{align-items:center}}
+    @media(max-width:345px){.app{padding-left:13px;padding-right:13px}.brand strong{font-size:17px}.day{font-size:12px}.bottom{padding-left:8px;padding-right:8px}}
+    @media(prefers-reduced-motion:reduce){.sheet{animation:none}*{scroll-behavior:auto!important;transition:none!important}}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="top">
+      <div class="brand"><div class="brand-mark" aria-hidden="true">✦</div><div><strong>Lilla Plan</strong><small>твой стримовый уголок ♡</small></div></div>
+      <button class="icon-btn" id="settingsBtn" type="button" aria-label="Настройки и резервные копии">⚙</button>
+    </header>
+    <main id="main"></main>
+  </div>
+  <div class="bottom"><nav class="bottom-inner" aria-label="Разделы">
+    <button class="nav active" data-nav="home" type="button"><span class="nav-icon">⌂</span><span>Главная</span></button>
+    <button class="nav" data-nav="calendar" type="button"><span class="nav-icon">▦</span><span>Календарь</span></button>
+    <button class="add" id="addBtn" type="button" aria-label="Добавить запись">+</button>
+    <button class="nav" data-nav="ideas" type="button"><span class="nav-icon">✧</span><span>Идеи</span></button>
+    <button class="nav" data-nav="notes" type="button"><span class="nav-icon">▤</span><span>Заметки</span></button>
+  </nav></div>
+  <div class="overlay" id="overlay" role="presentation"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <div class="sheet-head"><h2 id="sheetTitle">Новая запись</h2><button class="icon-btn" id="closeSheet" type="button" aria-label="Закрыть">×</button></div>
+    <div class="sheet-scroll" id="sheetContent"></div>
+  </div></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+(() => {
+  'use strict';
+  const KEY = 'lilla-plan-data-v1';
+  const main = document.querySelector('#main');
+  const overlay = document.querySelector('#overlay');
+  const sheetContent = document.querySelector('#sheetContent');
+  const sheetTitle = document.querySelector('#sheetTitle');
+  const fmtMonth = new Intl.DateTimeFormat('ru-RU',{month:'long',year:'numeric'});
+  const fmtFull = new Intl.DateTimeFormat('ru-RU',{day:'numeric',month:'long',weekday:'long'});
+  const fmtShort = new Intl.DateTimeFormat('ru-RU',{month:'short'});
+  const dateToKey = d => [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');
+  const parseDate = key => new Date(Number(key.slice(0,4)),Number(key.slice(5,7))-1,Number(key.slice(8,10)));
+  const todayKey = () => dateToKey(new Date());
+  const esc = value => String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  const uid = () => window.crypto?.randomUUID?.() || ('id-' + Date.now() + '-' + Math.random().toString(36).slice(2));
+  const cleanText = (v,max=4000) => String(v ?? '').trim().slice(0,max);
+  let db = {streams:[],notes:[],ideas:[]};
+  try{const loaded=JSON.parse(localStorage.getItem(KEY));if(loaded && Array.isArray(loaded.streams) && Array.isArray(loaded.notes)) db={streams:loaded.streams,notes:loaded.notes,ideas:Array.isArray(loaded.ideas)?loaded.ideas:[]};}catch(e){console.warn('Storage unavailable',e)}
+  let view='home',selectedDate=todayKey(),shownMonth=new Date(),noteFilter='all',noteSearch='',ideaFilter='all',ideaSearch='',toastTimer;
+  const sortedStreams = arr => [...arr].sort((a,b)=>(a.date+' '+a.time).localeCompare(b.date+' '+b.time));
+  const saved = () => {try{localStorage.setItem(KEY,JSON.stringify(db));}catch(e){alert('Не удалось сохранить изменения. Проверьте доступное место в браузере.');return false}render();return true};
+  const showToast = text => {let el=document.querySelector('#toast');el.textContent=text;el.classList.add('visible');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('visible'),2600)};
+  const prettyDate = key => fmtFull.format(parseDate(key));
+  const line = (v) => esc(v).replace(/\n/g,'<br>');
+  const statusName = s => ({planned:'Запланирован',done:'Проведён',cancelled:'Отменён'}[s]||'Запланирован');
+  const statusClass = s => s==='done'?'mint':s==='cancelled'?'gray':'';
+  const upcoming = () => sortedStreams(db.streams.filter(s => s.date>=todayKey() && s.status==='planned'));
+  const renderEvent = s => {let d=parseDate(s.date);return `<button class="card event-card" data-edit-stream="${esc(s.id)}" type="button"><div class="date-pill"><div class="d">${d.getDate()}</div><div class="m">${esc(fmtShort.format(d).replace('.',''))}</div></div><div class="event-copy"><div class="event-title">${esc(s.title)}</div><div class="event-meta">${esc(s.time)} · ${esc(s.game||'Just Chatting')} ${s.status==='cancelled'?'· Отменён':''}</div></div><span class="chevron">›</span></button>`};
+  const renderNote = n => `<button class="note-card" data-edit-note="${esc(n.id)}" type="button"><div class="note-heading">${n.pinned?'✦ ':''}${esc(n.title || 'Без названия')}</div><p class="note-preview">${esc(n.body||'Здесь пока нет текста')}</p><div class="note-footer"><span>${esc(({idea:'💡 Идея',task:'✓ Задача',other:'✎ Другое'})[n.category]||'✎ Другое')}</span>${n.date?`<span>· ${esc(fmtShort.format(parseDate(n.date)))} ${parseDate(n.date).getDate()}</span>`:''}</div></button>`;
+  const ideaCategories={game:'🎮 Игра',talk:'💬 Общение',interactive:'🎲 Интерактив',other:'✦ Другое'};
+  const ideaEmoji={game:'🎮',talk:'💬',interactive:'🎲',other:'✨'};
+  const ideaStatuses={bank:'В копилке',prep:'В подготовке',ready:'Готово'};
+  const countDone = idea => (idea.tasks||[]).filter(task=>task.done).length;
+  const linkedStream = idea => sortedStreams(db.streams.filter(s=>s.sourceIdeaId===idea.id)).at(-1);
+  const sortedIdeas = ideas => [...ideas].sort((a,b)=>Number(b.status==='prep')-Number(a.status==='prep')||String(b.updatedAt||'').localeCompare(String(a.updatedAt||'')));
+  const renderIdea = idea => {
+    const tasks=Array.isArray(idea.tasks)?idea.tasks:[],done=countDone(idea),pct=tasks.length?Math.round(done/tasks.length*100):0,linked=linkedStream(idea);
+    return `<article class="card idea-card"><div class="idea-top"><div class="idea-symbol">${ideaEmoji[idea.category]||'✨'}</div><div class="idea-info"><div class="idea-title">${esc(idea.title)}</div><div class="idea-sub">${esc(ideaCategories[idea.category]||'✦ Другое')} ${idea.game?'· '+esc(idea.game):''}</div></div><span class="pill ${idea.status==='ready'?'mint':idea.status==='bank'?'gray':''}">${esc(ideaStatuses[idea.status]||'В копилке')}</span></div>
+      ${idea.description?`<p class="idea-desc">${esc(idea.description)}</p>`:''}
+      ${tasks.length?`<div class="idea-progress"><span>Чек-лист подготовки</span><span>${done} из ${tasks.length} · ${pct}%</span></div><div class="progress-track" role="progressbar" aria-label="Прогресс подготовки" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><div class="progress-fill" style="width:${pct}%"></div></div><div class="checklist">${tasks.map(task=>`<label class="check-item ${task.done?'checked':''}"><input type="checkbox" data-task-idea="${esc(idea.id)}" data-task-id="${esc(task.id)}" ${task.done?'checked':''}><span>${esc(task.text)}</span></label>`).join('')}</div>`:`<div class="idea-hint" style="margin:13px 0 0">Добавь чек-лист, чтобы отмечать подготовку к стриму.</div>`}
+      ${linked?`<button type="button" class="scheduled-link" data-edit-stream="${esc(linked.id)}"><span>📅 В календаре: ${esc(prettyDate(linked.date))}, ${esc(linked.time)}</span><span>›</span></button>`:''}
+      <div class="idea-actions"><button type="button" class="idea-action" data-edit-idea="${esc(idea.id)}">✎ Изменить</button><button type="button" class="idea-action schedule" data-schedule-idea="${esc(idea.id)}">＋ В календарь</button></div></article>`;
+  };
+  const renderIdeaTeaser = idea => `<button type="button" class="card idea-teaser" data-edit-idea="${esc(idea.id)}"><div class="idea-symbol">${ideaEmoji[idea.category]||'✨'}</div><div style="flex:1;min-width:0"><strong>${esc(idea.title)}</strong><small>${idea.tasks?.length?`${countDone(idea)} из ${idea.tasks.length} пунктов готовы`:'Добавь чек-лист подготовки'}</small></div><span class="chevron">›</span></button>`;
+  const empty = (icon,title,detail,button,on) => `<div class="empty"><span class="empty-icon">${icon}</span><strong>${title}</strong><p>${detail}</p><button type="button" data-action="${on}">${button}</button></div>`;
+  function renderHome(){
+    const now=new Date(),month=new Date(now.getFullYear(),now.getMonth(),1);
+    const thisMonth=db.streams.filter(s=>s.date.startsWith(dateToKey(month).slice(0,7))&&s.status!=='cancelled').length;
+    let items=upcoming().slice(0,3),ideas=sortedIdeas(db.ideas).slice(0,2),notes=[...db.notes].sort((a,b)=>Number(!!b.pinned)-Number(!!a.pinned)||String(b.updatedAt||'').localeCompare(String(a.updatedAt||''))).slice(0,2);
+    main.innerHTML=`<section class="greeting"><p class="eyebrow">✦ твой личный планер</p><h1>Привет, стример! ♡</h1><p class="subtitle">Планируй эфиры, сохраняй идеи и ничего не теряй.</p></section>
+    <div class="stats"><div class="stat"><span class="stat-num">${thisMonth}</span><div class="stat-label">эфиров в этом месяце</div></div><div class="stat"><span class="stat-num">${db.ideas.length}</span><div class="stat-label">идей для стримов</div></div></div>
+    <div class="section-head"><h2>Ближайшие стримы ✨</h2><button class="text-btn" type="button" data-nav="calendar">В календарь ›</button></div>
+    ${items.length?items.map(renderEvent).join(''):empty('🌙','Пока нет эфиров','Добавь первый стрим — он появится здесь и в календаре.','Запланировать','add-stream')}
+    <div class="section-head"><h2>Копилка идей 💡</h2><button class="text-btn" type="button" data-nav="ideas">Все идеи ›</button></div>
+    ${ideas.length?ideas.map(renderIdeaTeaser).join(''):empty('🎀','Пора придумать что-нибудь','Собери идеи будущих эфиров и чек-листы подготовки.','Новая идея','add-idea')}
+    <div class="section-head"><h2>Мои заметки 📝</h2><button class="text-btn" type="button" data-nav="notes">Все заметки ›</button></div>
+    ${notes.length?notes.map(renderNote).join(''):empty('💭','Идеи ждут тебя','Сохраняй идеи для игр, эфиров и всего остального.','Создать заметку','add-note')}`;
+  }
+  function renderCalendar(){
+    const y=shownMonth.getFullYear(),m=shownMonth.getMonth(),first=new Date(y,m,1),offset=(first.getDay()+6)%7,daysInMonth=new Date(y,m+1,0).getDate(),cells=Math.ceil((offset+daysInMonth)/7)*7;
+    const dateCells=[];
+    for(let i=0;i<cells;i++){
+      const d=new Date(y,m,i-offset+1),key=dateToKey(d),sc=db.streams.some(s=>s.date===key),nc=db.notes.some(n=>n.date===key);
+      dateCells.push(`<button type="button" class="day ${d.getMonth()!==m?'other ':''}${key===todayKey()?'today ':''}${key===selectedDate?'selected':''}" data-day="${key}" aria-label="${esc(prettyDate(key))}${sc?', есть стрим':''}${nc?', есть заметка':''}" aria-pressed="${key===selectedDate}"><span>${d.getDate()}</span><span class="dots">${sc?'<i class="dot"></i>':''}${nc?'<i class="dot note"></i>':''}</span></button>`);
+    }
+    const dayEvents=sortedStreams(db.streams.filter(s=>s.date===selectedDate));
+    const dayNotes=db.notes.filter(n=>n.date===selectedDate);
+    main.innerHTML=`<section class="greeting"><p class="eyebrow">✦ твой график</p><h1>Календарь</h1><p class="subtitle">Стримы и идеи — по дням.</p></section>
+    <section class="card calendar"><div class="calendar-top"><div class="calendar-month">${esc(fmtMonth.format(first))}</div><div class="month-actions"><button type="button" class="month-arrow" data-month="-1" aria-label="Предыдущий месяц">‹</button><button type="button" class="month-arrow" data-month="1" aria-label="Следующий месяц">›</button></div></div>
+    <div class="weekdays"><span>Пн</span><span>Вт</span><span>Ср</span><span>Чт</span><span>Пт</span><span>Сб</span><span>Вс</span></div><div class="days">${dateCells.join('')}</div></section>
+    <div class="section-head"><div><h2>${esc(prettyDate(selectedDate))}</h2><div class="tiny">${dayEvents.length} стримов · ${dayNotes.length} заметок</div></div><button type="button" class="small-add" data-action="choose">+ Добавить</button></div>
+    <div class="day-events">${dayEvents.map(s=>`<button type="button" class="card day-event" data-edit-stream="${esc(s.id)}"><span class="time-tag">${esc(s.time)}</span><span class="day-event-body"><strong>${esc(s.title)}</strong><small>${esc(s.game||'Just Chatting')} · ${statusName(s.status)}</small></span><span class="chevron">›</span></button>`).join('')}
+    ${dayNotes.map(n=>`<button type="button" class="card day-note" data-edit-note="${esc(n.id)}"><span>🗒️</span><span style="flex:1">${esc(n.title||'Без названия')}</span><span class="chevron">›</span></button>`).join('')}
+    ${!dayEvents.length&&!dayNotes.length?`<div class="empty"><span class="empty-icon">☁️</span><strong>Свободный день</strong><p>На эту дату записей пока нет.</p><button type="button" data-action="add-stream">+ Планировать стрим</button></div>`:''}</div>`;
+  }
+  function renderNotes(){
+    const q=noteSearch.toLocaleLowerCase('ru-RU');
+    const items=[...db.notes].filter(n=>(noteFilter==='all'||(noteFilter==='pinned'&&n.pinned)||n.category===noteFilter) && (n.title+' '+n.body).toLocaleLowerCase('ru-RU').includes(q)).sort((a,b)=>Number(!!b.pinned)-Number(!!a.pinned)||String(b.updatedAt||'').localeCompare(String(a.updatedAt||'')));
+    main.innerHTML=`<section class="greeting"><p class="eyebrow">✦ всё важное рядом</p><h1>Заметки</h1><p class="subtitle">Идеи, списки дел и мысли для будущих эфиров.</p></section>
+    <div class="toolbar"><input class="search" type="search" id="notesSearch" placeholder="Поиск по заметкам…" value="${esc(noteSearch)}" aria-label="Поиск по заметкам" autocomplete="off"><button class="icon-btn" type="button" data-action="add-note" aria-label="Добавить заметку">＋</button></div>
+    <div class="chips" aria-label="Фильтры">${[['all','Все'],['pinned','✦ Избранное'],['idea','💡 Идеи'],['task','✓ Задачи'],['other','✎ Другое']].map(([id,label])=>`<button type="button" data-filter="${id}" class="chip ${noteFilter===id?'selected':''}">${label}</button>`).join('')}</div>
+    <div style="margin-top:12px">${items.length?items.map(renderNote).join(''):empty('📓','Ничего не найдено',noteSearch||noteFilter!=='all'?'Попробуй изменить поиск или фильтр.':'Создай первую заметку, чтобы сохранить важное.','Новая заметка','add-note')}</div>`;
+  }
+  function renderIdeas(){
+    const q=ideaSearch.toLocaleLowerCase('ru-RU');
+    const items=sortedIdeas(db.ideas.filter(i=>(ideaFilter==='all'||i.status===ideaFilter) && (i.title+' '+(i.description||'')+' '+(i.game||'')).toLocaleLowerCase('ru-RU').includes(q)));
+    const ready=db.ideas.filter(i=>i.status==='ready').length;
+    main.innerHTML=`<section class="greeting"><p class="eyebrow">✦ будущие эфиры</p><h1>Банк идей</h1><p class="subtitle">Игры, рубрики, интерактивы и всё, что хочется попробовать.</p></section>
+      <div class="stats"><div class="stat"><span class="stat-num">${db.ideas.length}</span><div class="stat-label">идей в копилке</div></div><div class="stat"><span class="stat-num">${ready}</span><div class="stat-label">готовы к эфиру</div></div></div>
+      <div class="toolbar"><input class="search" id="ideasSearch" type="search" placeholder="Найти идею…" value="${esc(ideaSearch)}" aria-label="Поиск по идеям" autocomplete="off"><button class="icon-btn" type="button" data-action="add-idea" aria-label="Добавить идею">＋</button></div>
+      <div class="chips" aria-label="Статусы идей">${[['all','Все'],['bank','💭 В копилке'],['prep','🛠 Готовлю'],['ready','✓ Готово']].map(([id,label])=>`<button type="button" data-idea-filter="${id}" class="chip ${ideaFilter===id?'selected':''}">${label}</button>`).join('')}</div>
+      <div class="section-head"><h2>${ideaFilter==='all'?'Мои задумки':ideaStatuses[ideaFilter]}</h2><span class="tiny">${items.length} шт.</span></div>
+      ${items.length?items.map(renderIdea).join(''):empty('💡','Здесь пока пусто',ideaSearch||ideaFilter!=='all'?'Попробуй другой поиск или фильтр.':'Запиши задумку для стрима и отмечай готовность прямо в чек-листе.','Добавить идею','add-idea')}`;
+  }
+  function render(){
+    document.querySelectorAll('.bottom .nav').forEach(b=>{const active=b.dataset.nav===view;b.classList.toggle('active',active);b.setAttribute('aria-current',active?'page':'false')});
+    if(view==='calendar')renderCalendar();else if(view==='notes')renderNotes();else if(view==='ideas')renderIdeas();else renderHome();
+  }
+  function nav(section){view=section;render();window.scrollTo({top:0,behavior:'instant'})}
+  function sheet(title,body){sheetTitle.textContent=title;sheetContent.innerHTML=body;overlay.classList.add('open');document.body.style.overflow='hidden';sheetContent.scrollTop=0}
+  function closeSheet(){overlay.classList.remove('open');document.body.style.overflow='';}
+  function choose(){sheet('Что добавим? ✨',`<button type="button" class="choice" data-action="add-stream"><span class="choice-icon">📺</span><span><strong>Новый стрим</strong><small>Дата, время, игра и план эфира</small></span></button><button type="button" class="choice" data-action="add-idea"><span class="choice-icon">💡</span><span><strong>Идея для стрима</strong><small>Рубрика, интерактив и чек-лист</small></span></button><button type="button" class="choice" data-action="add-note"><span class="choice-icon">📝</span><span><strong>Новая заметка</strong><small>Мысль, задача или список</small></span></button>`)}
+  function streamForm(id,fromIdeaId){
+    const s=id?db.streams.find(x=>x.id===id):null;
+    if(id&&!s)return;
+    const idea=fromIdeaId?db.ideas.find(x=>x.id===fromIdeaId):null;
+    const selected=s?.date||(view==='calendar'?selectedDate:todayKey());
+    const summary=idea?[idea.description,idea.tasks?.length?'Чек-лист подготовки:\n'+idea.tasks.map(t=>(t.done?'☑ ':'☐ ')+t.text).join('\n'):''].filter(Boolean).join('\n\n'):'';
+    sheet(s?'Редактировать стрим':idea?'Стрим из идеи 💡':'Новый стрим 📺',`<form id="streamForm" data-id="${esc(s?.id||'')}" data-source-idea="${esc(s?.sourceIdeaId||idea?.id||'')}">
+      <div class="field"><label for="streamTitle">Название стрима *</label><input id="streamTitle" name="title" required maxlength="120" placeholder="Например, уютный вечер в Valorant" value="${esc(s?.title||idea?.title||'')}"></div>
+      <div class="fields-2"><div class="field"><label for="streamDate">Дата *</label><input type="date" id="streamDate" name="date" required value="${esc(selected)}"></div><div class="field"><label for="streamTime">Время *</label><input type="time" id="streamTime" name="time" required value="${esc(s?.time||'19:00')}"></div></div>
+      <div class="field"><label for="streamGame">Игра / категория</label><input id="streamGame" name="game" maxlength="100" placeholder="Valorant, Just Chatting…" value="${esc(s?.game||idea?.game||'')}"></div>
+      <div class="field"><label for="streamStatus">Статус</label><select id="streamStatus" name="status"><option value="planned" ${s?.status==='planned'||!s?'selected':''}>Запланирован</option><option value="done" ${s?.status==='done'?'selected':''}>Проведён</option><option value="cancelled" ${s?.status==='cancelled'?'selected':''}>Отменён</option></select></div>
+      <div class="field"><label for="streamDetails">Заметки к эфиру</label><textarea id="streamDetails" name="details" maxlength="4000" placeholder="Что будем делать, идеи для интерактивов…">${esc(s?.details||summary)}</textarea></div>
+      <div class="form-actions">${s?`<button class="delete" type="button" data-delete-stream="${esc(s.id)}">Удалить</button>`:''}<button class="primary" type="submit">${s?'Сохранить изменения':'Добавить стрим ♡'}</button></div>
+    </form>`);
+    document.querySelector('#streamTitle')?.focus({preventScroll:true});
+  }
+  function ideaForm(id){
+    const idea=id?db.ideas.find(x=>x.id===id):null;
+    if(id&&!idea)return;
+    const starter=['Проверить OBS и звук','Подготовить сцены и оформление','Продумать контент и интерактивы','Сделать анонс стрима'].join('\n');
+    const tasks=idea?Array.isArray(idea.tasks)?idea.tasks.map(t=>t.text).join('\n'):'':starter;
+    sheet(idea?'Редактировать идею':'Новая идея 💡',`<form id="ideaForm" data-id="${esc(idea?.id||'')}">
+      <div class="field"><label for="ideaTitle">Название идеи *</label><input id="ideaTitle" name="title" maxlength="120" required placeholder="Например, рулетка скинов на стриме" value="${esc(idea?.title||'')}"></div>
+      <div class="fields-2"><div class="field"><label for="ideaCategory">Категория</label><select id="ideaCategory" name="category">${Object.entries(ideaCategories).map(([id,label])=>`<option value="${id}" ${idea?.category===id||(!idea&&id==='interactive')?'selected':''}>${label}</option>`).join('')}</select></div>
+      <div class="field"><label for="ideaStatus">Статус</label><select id="ideaStatus" name="status">${Object.entries(ideaStatuses).map(([id,label])=>`<option value="${id}" ${idea?.status===id||(!idea&&id==='bank')?'selected':''}>${label}</option>`).join('')}</select></div></div>
+      <div class="field"><label for="ideaGame">Игра / категория Twitch</label><input id="ideaGame" name="game" maxlength="100" placeholder="Valorant, Just Chatting…" value="${esc(idea?.game||'')}"></div>
+      <div class="field"><label for="ideaDescription">Что хочется сделать?</label><textarea id="ideaDescription" name="description" maxlength="4000" placeholder="Тема эфира, правила интерактива, нужные ссылки…">${esc(idea?.description||'')}</textarea></div>
+      <div class="field"><label for="ideaTasks">Чек-лист подготовки</label><textarea id="ideaTasks" name="tasks" maxlength="5000" style="min-height:150px" placeholder="Один пункт с каждой новой строки">${esc(tasks)}</textarea><div class="tiny" style="margin-top:6px">Каждая строка — отдельная задача. Отмечать выполнение можно прямо на карточке идеи. Максимум 30 пунктов.</div></div>
+      <div class="form-actions">${idea?`<button class="delete" type="button" data-delete-idea="${esc(idea.id)}">Удалить</button>`:''}<button class="primary" type="submit">${idea?'Сохранить изменения':'Сохранить идею ♡'}</button></div>
+    </form>`);
+    document.querySelector('#ideaTitle')?.focus({preventScroll:true});
+  }
+  function noteForm(id){
+    const n=id?db.notes.find(x=>x.id===id):null;
+    if(id&&!n)return;
+    sheet(n?'Редактировать заметку':'Новая заметка 📝',`<form id="noteForm" data-id="${esc(n?.id||'')}">
+      <div class="field"><label for="noteTitle">Заголовок *</label><input name="title" id="noteTitle" required maxlength="120" value="${esc(n?.title||'')}" placeholder="Что нужно запомнить?"></div>
+      <div class="field"><label for="noteBody">Текст заметки</label><textarea name="body" id="noteBody" maxlength="12000" style="min-height:160px" placeholder="Запиши сюда всё, что хочешь…">${esc(n?.body||'')}</textarea></div>
+      <div class="fields-2"><div class="field"><label for="noteCategory">Категория</label><select id="noteCategory" name="category">${[['idea','💡 Идея'],['task','✓ Задача'],['other','✎ Другое']].map(([v,label])=>`<option value="${v}" ${n?.category===v||!n&&v==='idea'?'selected':''}>${label}</option>`).join('')}</select></div>
+      <div class="field"><label for="noteDate">Привязать к дате</label><input id="noteDate" type="date" name="date" value="${esc(n?.date|| (view==='calendar'?selectedDate:''))}"></div></div>
+      <label class="toggle-line"><input type="checkbox" name="pinned" ${n?.pinned?'checked':''}> Закрепить наверху ✦</label>
+      <div class="form-actions">${n?`<button class="delete" type="button" data-delete-note="${esc(n.id)}">Удалить</button>`:''}<button class="primary" type="submit">${n?'Сохранить изменения':'Сохранить заметку ♡'}</button></div>
+    </form>`);
+    document.querySelector('#noteTitle')?.focus({preventScroll:true});
+  }
+  function settings(){sheet('Настройки ⚙',`<div class="card settings-row"><div class="settings-title">Резервная копия</div><p>Все записи хранятся на этом устройстве в браузере, а не в облаке. Регулярно сохраняй копию, чтобы не потерять данные при очистке Safari или смене iPhone.</p><div class="settings-actions"><button type="button" class="outlined" data-action="export">↓ Скачать JSON</button><button type="button" class="outlined" data-action="import">↑ Восстановить</button></div><input type="file" id="importFile" class="file-input" accept=".json,application/json"></div><div class="card settings-row"><div class="settings-title">На экран «Домой»</div><p>Открой опубликованный сайт в Safari, нажми «Поделиться» → «На экран Домой». Сайт будет выглядеть как отдельное приложение. После установки используй его в одном и том же режиме, чтобы записи оставались вместе.</p></div><div class="card settings-row"><div class="settings-title">О проекте</div><p>Lilla Plan — личный планер стримов, идей и заметок. Версия 1.1 · Работает без регистрации.</p></div>`)}
+  function exportData(){
+    const data=JSON.stringify({version:2,exportedAt:new Date().toISOString(),streams:db.streams,notes:db.notes,ideas:db.ideas},null,2);
+    const blob=new Blob([data],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`lilla-plan-${todayKey()}.json`;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);showToast('Копия готова ♡');
+  }
+  function isDate(s){return /^\d{4}-\d{2}-\d{2}$/.test(s) && dateToKey(parseDate(s))===s}
+  function validData(obj){
+    if(!obj||!Array.isArray(obj.streams)||!Array.isArray(obj.notes)||obj.streams.length>20000||obj.notes.length>20000)return false;
+    return obj.streams.every(s=>s&&typeof s.id==='string'&&typeof s.title==='string'&&typeof s.date==='string'&&isDate(s.date)&&typeof s.time==='string'&&/^\d{2}:\d{2}$/.test(s.time)&&s.title.length<=120)
+      &&obj.notes.every(n=>n&&typeof n.id==='string'&&typeof n.title==='string'&&typeof n.body==='string'&&n.title.length<=120&&n.body.length<=12000&&(!n.date||isDate(n.date)))
+      &&(!Object.hasOwn(obj,'ideas')||(Array.isArray(obj.ideas)&&obj.ideas.length<=20000&&obj.ideas.every(i=>i&&typeof i.id==='string'&&i.id.length<=200&&typeof i.title==='string'&&i.title.length<=120&&typeof (i.description||'')==='string'&&Array.isArray(i.tasks)&&i.tasks.length<=30&&i.tasks.every(t=>t&&typeof t.id==='string'&&t.id.length<=200&&typeof t.text==='string'&&t.text.length<=120))));
+  }
+  main.addEventListener('input',e=>{
+    if(e.target.id==='notesSearch'||e.target.id==='ideasSearch'){
+      const id=e.target.id,pos=e.target.selectionStart;
+      if(id==='notesSearch'){noteSearch=e.target.value;renderNotes()}else{ideaSearch=e.target.value;renderIdeas()}
+      const input=document.getElementById(id);input?.focus();try{input?.setSelectionRange(pos,pos)}catch{}
+    }
+  });
+  document.addEventListener('click',e=>{
+    const target=e.target.closest('button');if(!target)return;
+    if(target.id==='addBtn'){choose();return}
+    if(target.id==='settingsBtn'){settings();return}
+    if(target.id==='closeSheet'){closeSheet();return}
+    if(target.dataset.nav){nav(target.dataset.nav);return}
+    if(target.dataset.month){shownMonth=new Date(shownMonth.getFullYear(),shownMonth.getMonth()+Number(target.dataset.month),1);selectedDate=dateToKey(new Date(shownMonth.getFullYear(),shownMonth.getMonth(),1));render();return}
+    if(target.dataset.day){selectedDate=target.dataset.day;const d=parseDate(selectedDate);shownMonth=new Date(d.getFullYear(),d.getMonth(),1);render();return}
+    if(target.dataset.editStream){streamForm(target.dataset.editStream);return}
+    if(target.dataset.editNote){noteForm(target.dataset.editNote);return}
+    if(target.dataset.editIdea){ideaForm(target.dataset.editIdea);return}
+    if(target.dataset.scheduleIdea){streamForm(null,target.dataset.scheduleIdea);return}
+    if(target.dataset.ideaFilter){ideaFilter=target.dataset.ideaFilter;render();return}
+    if(target.dataset.filter){noteFilter=target.dataset.filter;render();return}
+    if(target.dataset.deleteStream){if(confirm('Удалить этот стрим?')){db.streams=db.streams.filter(s=>s.id!==target.dataset.deleteStream);saved();closeSheet();showToast('Стрим удалён')}return}
+    if(target.dataset.deleteNote){if(confirm('Удалить эту заметку?')){db.notes=db.notes.filter(n=>n.id!==target.dataset.deleteNote);saved();closeSheet();showToast('Заметка удалена')}return}
+    if(target.dataset.deleteIdea){if(confirm('Удалить эту идею? Запланированные стримы сохранятся.')){db.ideas=db.ideas.filter(i=>i.id!==target.dataset.deleteIdea);saved();closeSheet();showToast('Идея удалена')}return}
+    switch(target.dataset.action){case 'choose':choose();break;case 'add-stream':streamForm();break;case 'add-note':noteForm();break;case 'add-idea':ideaForm();break;case 'export':exportData();break;case 'import':document.querySelector('#importFile')?.click();break}
+  });
+  document.addEventListener('submit',e=>{
+    if(e.target.id==='streamForm'){
+      e.preventDefault();const f=e.target,form=new FormData(f),id=f.dataset.id||uid();
+      const s={id,title:cleanText(form.get('title'),120),date:String(form.get('date')),time:String(form.get('time')),game:cleanText(form.get('game'),100),status:String(form.get('status')),details:cleanText(form.get('details'),4000),sourceIdeaId:cleanText(f.dataset.sourceIdea||'',200)};
+      if(!s.title||!isDate(s.date)||!/^([01]\d|2[0-3]):[0-5]\d$/.test(s.time)){alert('Проверь название, дату и время.');return}
+      const i=db.streams.findIndex(x=>x.id===id);if(i>=0)db.streams[i]=s;else db.streams.push(s);
+      selectedDate=s.date;shownMonth=new Date(parseDate(s.date).getFullYear(),parseDate(s.date).getMonth(),1);
+      if(saved()){closeSheet();showToast('Стрим сохранён ♡')}return;
+    }
+    if(e.target.id==='ideaForm'){
+      e.preventDefault();const f=e.target,form=new FormData(f),id=f.dataset.id||uid(),old=db.ideas.find(i=>i.id===id);
+      const lines=String(form.get('tasks')||'').split(/\r?\n/).map(s=>cleanText(s,120)).filter(Boolean);
+      if(lines.length>30){alert('В чек-листе может быть не больше 30 пунктов.');return}
+      const used=new Set();const tasks=lines.map((txt,index)=>{
+        const match=(old?.tasks||[]).find(t=>t.text===txt&&!used.has(t.id));
+        if(match)used.add(match.id);
+        return {id:match?.id||uid(),text:txt,done:!!match?.done};
+      });
+      const idea={id,title:cleanText(form.get('title'),120),category:String(form.get('category')),status:String(form.get('status')),game:cleanText(form.get('game'),100),description:cleanText(form.get('description'),4000),tasks,createdAt:old?.createdAt||new Date().toISOString(),updatedAt:new Date().toISOString()};
+      if(!idea.title||!ideaCategories[idea.category]||!ideaStatuses[idea.status]){alert('Проверь название и категорию идеи.');return}
+      const i=db.ideas.findIndex(x=>x.id===id);if(i>=0)db.ideas[i]=idea;else db.ideas.push(idea);
+      if(saved()){closeSheet();showToast('Идея сохранена ♡')}return;
+    }
+    if(e.target.id==='noteForm'){
+      e.preventDefault();const f=e.target,form=new FormData(f),id=f.dataset.id||uid(),old=db.notes.find(n=>n.id===id);
+      const n={id,title:cleanText(form.get('title'),120),body:cleanText(form.get('body'),12000),category:String(form.get('category')),date:String(form.get('date')||''),pinned:form.has('pinned'),updatedAt:new Date().toISOString(),createdAt:old?.createdAt||new Date().toISOString()};
+      if(!n.title||(n.date&&!isDate(n.date))){alert('Проверь заголовок и дату.');return}
+      const i=db.notes.findIndex(x=>x.id===id);if(i>=0)db.notes[i]=n;else db.notes.push(n);
+      if(saved()){closeSheet();showToast('Заметка сохранена ♡')}return;
+    }
+  });
+  document.addEventListener('change',async e=>{
+    if(e.target.matches('[data-task-idea]')){
+      const idea=db.ideas.find(i=>i.id===e.target.dataset.taskIdea);
+      const task=idea?.tasks?.find(t=>t.id===e.target.dataset.taskId);
+      if(task){task.done=e.target.checked;idea.updatedAt=new Date().toISOString();saved();showToast(task.done?'Пункт выполнен ✨':'Пункт снова в списке')}
+      return;
+    }
+    if(e.target.id!=='importFile')return;
+    const file=e.target.files?.[0];if(!file)return;
+    try{
+      if(file.size>8*1024*1024)throw new Error('Слишком большой файл');
+      const obj=JSON.parse(await file.text());if(!validData(obj))throw new Error('Неподходящий формат файла');
+      if(!confirm(`Заменить текущие записи? В файле ${obj.streams.length} стримов, ${obj.notes.length} заметок и ${(obj.ideas||[]).length} идей.\n\nСначала рекомендуется скачать резервную копию.`))return;
+      db={streams:obj.streams.map(s=>({id:String(s.id),title:cleanText(s.title,120),date:s.date,time:s.time,game:cleanText(s.game||'',100),status:['planned','done','cancelled'].includes(s.status)?s.status:'planned',details:cleanText(s.details||'',4000),sourceIdeaId:cleanText(s.sourceIdeaId||'',200)})),notes:obj.notes.map(n=>({id:String(n.id),title:cleanText(n.title,120),body:cleanText(n.body,12000),category:['idea','task','other'].includes(n.category)?n.category:'other',date:n.date||'',pinned:!!n.pinned,updatedAt:n.updatedAt||'',createdAt:n.createdAt||''})),ideas:(obj.ideas||[]).map(i=>({id:i.id,title:cleanText(i.title,120),category:ideaCategories[i.category]?i.category:'other',status:ideaStatuses[i.status]?i.status:'bank',game:cleanText(i.game||'',100),description:cleanText(i.description||'',4000),tasks:i.tasks.map(t=>({id:t.id,text:cleanText(t.text,120),done:!!t.done})),createdAt:i.createdAt||'',updatedAt:i.updatedAt||''}))};
+      if(saved()){closeSheet();showToast('Данные восстановлены ♡')}
+    }catch(err){alert('Не получилось прочитать копию: '+err.message)}finally{e.target.value=''}
+  });
+  overlay.addEventListener('click',e=>{if(e.target===overlay)closeSheet()});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&overlay.classList.contains('open'))closeSheet()});
+  render();
+  if('serviceWorker' in navigator && location.protocol==='https:') window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+})();
+</script>
+</body>
+</html>
