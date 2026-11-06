@@ -1,0 +1,19 @@
+{
+  "name": "Lilla Plan — календарь стримов и заметки",
+  "short_name": "Lilla Plan",
+  "description": "Мой планер стримов",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#100e1b",
+  "theme_color": "#100e1b",
+  "lang": "ru",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
