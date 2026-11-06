@@ -105,6 +105,22 @@
     .settings-title{font-size:14px;font-weight:750;margin:0 0 8px}.settings-row{padding:15px;margin:10px 0}.settings-row p{font-size:12px;color:var(--muted);line-height:1.55;margin:5px 0 12px}
     .outlined{background:#35293e;border:1px solid #65506b;border-radius:13px;padding:11px 14px;color:#f0c8ee;font-size:12px;font-weight:750}
     .danger{color:#ff9ba5}.settings-actions{display:flex;gap:8px;flex-wrap:wrap}.file-input{display:none}
+
+    .weekly-feature{display:flex;align-items:center;gap:12px;padding:15px;margin:17px 0;background:linear-gradient(110deg,#3d2846,#292443);border:1px solid #99759c;border-radius:20px}
+    .weekly-feature .emoji{font-size:25px}
+    .weekly-feature .info{flex:1;min-width:0}.weekly-feature strong{font-size:13px;display:block}
+    .weekly-feature small{display:block;font-size:11px;line-height:1.4;color:#cbbbd6;margin-top:4px}
+    .weekly-feature button{flex:none;border:0;border-radius:12px;background:linear-gradient(120deg,#ffb2d8,#bdadff);color:#2c1a32;padding:11px 12px;font-size:12px;font-weight:800}
+    .poster-weeks{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:9px 0 17px}
+    .poster-weeks button{width:44px;height:44px;border:1px solid #71607e;border-radius:13px;background:#3b2e4b;color:#f9eafa;font-size:23px}
+    .poster-weeks strong{text-align:center;font-size:14px;flex:1}
+    .poster-preview{padding:8px;background:#171221;border:1px solid #6a5074;border-radius:17px;margin:12px 0}
+    .poster-preview img{display:block;width:100%;height:auto;max-height:49svh;object-fit:contain;border-radius:11px}
+    .poster-buttons{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:11px}
+    .poster-buttons button{padding:14px 7px;border-radius:13px;border:1px solid #82618d;background:#3c2d4a;color:#f4dfef;font-size:12px;font-weight:750}
+    .poster-buttons .share{border:0;background:linear-gradient(125deg,#f5a5d0,#bba9fa);color:#27182c}
+    .poster-buttons button:disabled{opacity:.5}
+    .poster-help{font-size:12px;color:#c9b8d7;line-height:1.55;margin:5px 0 15px}
     .overlay{position:fixed;z-index:80;inset:0;background:#0a0813bc;display:none;align-items:flex-end;justify-content:center;backdrop-filter:blur(6px)}.overlay.open{display:flex}
     .sheet{width:100%;max-width:650px;background:linear-gradient(175deg,#31263d,#1b1829 45%);border:1px solid #79628750;border-bottom:none;border-radius:28px 28px 0 0;max-height:calc(100svh - env(safe-area-inset-top) - 16px);display:flex;flex-direction:column;box-shadow:0 -18px 65px #0009;animation:up .22s ease-out}
     @keyframes up{from{transform:translateY(15px);opacity:.6}to{transform:translateY(0);opacity:1}}
@@ -164,7 +180,8 @@
   const cleanText = (v,max=4000) => String(v ?? '').trim().slice(0,max);
   let db = {streams:[],notes:[],ideas:[]};
   try{const loaded=JSON.parse(localStorage.getItem(KEY));if(loaded && Array.isArray(loaded.streams) && Array.isArray(loaded.notes)) db={streams:loaded.streams,notes:loaded.notes,ideas:Array.isArray(loaded.ideas)?loaded.ideas:[]};}catch(e){console.warn('Storage unavailable',e)}
-  let view='home',selectedDate=todayKey(),shownMonth=new Date(),noteFilter='all',noteSearch='',ideaFilter='all',ideaSearch='',toastTimer;
+  let view='home',selectedDate=todayKey(),shownMonth=new Date(),noteFilter='all',noteSearch='',ideaFilter='all',toastTimer;
+  let graphicWeek=null,graphicFormat='post',graphicCanvas=null,graphicFile=null,graphicSequence=0;
   const sortedStreams = arr => [...arr].sort((a,b)=>(a.date+' '+a.time).localeCompare(b.date+' '+b.time));
   const saved = () => {try{localStorage.setItem(KEY,JSON.stringify(db));}catch(e){alert('Не удалось сохранить изменения. Проверьте доступное место в браузере.');return false}render();return true};
   const showToast = text => {let el=document.querySelector('#toast');el.textContent=text;el.classList.add('visible');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('visible'),2600)};
@@ -216,6 +233,7 @@
     main.innerHTML=`<section class="greeting"><p class="eyebrow">✦ твой график</p><h1>Календарь</h1><p class="subtitle">Стримы и идеи — по дням.</p></section>
     <section class="card calendar"><div class="calendar-top"><div class="calendar-month">${esc(fmtMonth.format(first))}</div><div class="month-actions"><button type="button" class="month-arrow" data-month="-1" aria-label="Предыдущий месяц">‹</button><button type="button" class="month-arrow" data-month="1" aria-label="Следующий месяц">›</button></div></div>
     <div class="weekdays"><span>Пн</span><span>Вт</span><span>Ср</span><span>Чт</span><span>Пт</span><span>Сб</span><span>Вс</span></div><div class="days">${dateCells.join('')}</div></section>
+    <div class="weekly-feature"><span class="emoji">🎀</span><span class="info"><strong>Расписание картинкой</strong><small>Сторис или пост с планами на неделю</small></span><button type="button" data-action="weekly-image">Создать</button></div>
     <div class="section-head"><div><h2>${esc(prettyDate(selectedDate))}</h2><div class="tiny">${dayEvents.length} стримов · ${dayNotes.length} заметок</div></div><button type="button" class="small-add" data-action="choose">+ Добавить</button></div>
     <div class="day-events">${dayEvents.map(s=>`<button type="button" class="card day-event" data-edit-stream="${esc(s.id)}"><span class="time-tag">${esc(s.time)}</span><span class="day-event-body"><strong>${esc(s.title)}</strong><small>${esc(s.game||'Just Chatting')} · ${statusName(s.status)}</small></span><span class="chevron">›</span></button>`).join('')}
     ${dayNotes.map(n=>`<button type="button" class="card day-note" data-edit-note="${esc(n.id)}"><span>🗒️</span><span style="flex:1">${esc(n.title||'Без названия')}</span><span class="chevron">›</span></button>`).join('')}
@@ -293,7 +311,115 @@
     </form>`);
     document.querySelector('#noteTitle')?.focus({preventScroll:true});
   }
-  function settings(){sheet('Настройки ⚙',`<div class="card settings-row"><div class="settings-title">Резервная копия</div><p>Все записи хранятся на этом устройстве в браузере, а не в облаке. Регулярно сохраняй копию, чтобы не потерять данные при очистке Safari или смене iPhone.</p><div class="settings-actions"><button type="button" class="outlined" data-action="export">↓ Скачать JSON</button><button type="button" class="outlined" data-action="import">↑ Восстановить</button></div><input type="file" id="importFile" class="file-input" accept=".json,application/json"></div><div class="card settings-row"><div class="settings-title">На экран «Домой»</div><p>Открой опубликованный сайт в Safari, нажми «Поделиться» → «На экран Домой». Сайт будет выглядеть как отдельное приложение. После установки используй его в одном и том же режиме, чтобы записи оставались вместе.</p></div><div class="card settings-row"><div class="settings-title">О проекте</div><p>Lilla Plan — личный планер стримов, идей и заметок. Версия 1.1 · Работает без регистрации.</p></div>`)}
+  function monday(d){const x=new Date(d.getFullYear(),d.getMonth(),d.getDate());x.setDate(x.getDate()-(x.getDay()+6)%7);return x}
+  function offsetDate(d,n){return new Date(d.getFullYear(),d.getMonth(),d.getDate()+n)}
+  function briefDate(d){return d.toLocaleDateString('ru-RU',{day:'numeric',month:'short'}).replace('.','')}
+  function graphicWeekLabel(){return briefDate(graphicWeek)+' — '+briefDate(offsetDate(graphicWeek,6))}
+  function graphicName(){return 'lilla-streams-'+dateToKey(graphicWeek)+'-'+graphicFormat+'.png'}
+  function showGraphic(){
+  graphicWeek=monday(parseDate(selectedDate));graphicFormat='post';
+  sheet('Расписание картинкой 🎀',`
+    <p class="poster-help">Выбери неделю и формат, а Lilla Plan соберёт красивую картинку по твоему календарю. Отменённые стримы скрыты.</p>
+    <div class="poster-weeks"><button data-graphic-week="-1" type="button" aria-label="Предыдущая неделя">‹</button><strong id="graphicWeekLabel"></strong><button data-graphic-week="1" type="button" aria-label="Следующая неделя">›</button></div>
+    <div class="field"><label for="graphicFormat">Формат</label><select id="graphicFormat"><option value="post">Пост · 1080 × 1350</option><option value="story">Сторис · 1080 × 1920</option></select></div>
+    <div class="poster-preview"><img id="graphicPreview" alt="Предпросмотр расписания на неделю"></div>
+    <div class="poster-buttons"><button data-action="graphic-download" type="button">↓ Скачать PNG</button><button class="share" id="graphicShare" data-action="graphic-share" type="button" disabled>Поделиться ♡</button></div>
+    <p class="poster-help">На iPhone нажми «Поделиться» → «Сохранить изображение». Можно также удерживать картинку в предпросмотре.</p>
+  `);refreshGraphic();
+}
+  function canvasRound(ctx,x,y,w,h,r){
+  r=Math.min(r,w/2,h/2);
+  ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();
+}
+  function canvasFit(ctx,value,width){
+  const s=String(value||'');if(ctx.measureText(s).width<=width)return s;
+  const a=Array.from(s);while(a.length>1&&ctx.measureText(a.join('')+'…').width>width)a.pop();return a.join('')+'…';
+}
+  function makeGraphic(){
+  const story=graphicFormat==='story',W=1080,H=story?1920:1350;
+  const c=document.createElement('canvas');c.width=W;c.height=H;const ctx=c.getContext('2d');
+  if(!ctx)throw Error('Canvas недоступен');
+  const bg=ctx.createLinearGradient(0,0,W,H);bg.addColorStop(0,'#372342');bg.addColorStop(.48,'#22192f');bg.addColorStop(1,'#100f1c');
+  ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+  const halo=ctx.createRadialGradient(900,110,30,900,120,780);halo.addColorStop(0,'#a5628a88');halo.addColorStop(1,'#a5628a00');
+  ctx.fillStyle=halo;ctx.fillRect(0,0,W,900);
+  for(let i=0;i<45;i++){
+    ctx.globalAlpha=.17+(i%6)*.1;ctx.fillStyle=i%3===0?'#ffd3ec':'#d8c9ff';
+    ctx.beginPath();ctx.arc((i*347+51)%W,(i*499+93)%H,i%8===0?3:1.6,0,Math.PI*2);ctx.fill();
+  }
+  ctx.globalAlpha=1;ctx.textAlign='left';ctx.fillStyle='#f5bbda';ctx.font='700 30px system-ui,sans-serif';
+  ctx.fillText('✦  LILLA PLAN   /   TWITCH',59,story?117:80);
+  const lg=ctx.createLinearGradient(52,110,920,285);lg.addColorStop(0,'#ffe5f4');lg.addColorStop(1,'#c3b0fc');
+  ctx.fillStyle=lg;ctx.font='900 75px system-ui,sans-serif';ctx.fillText('РАСПИСАНИЕ',53,story?210:176);
+  ctx.font='900 71px system-ui,sans-serif';ctx.fillText('СТРИМОВ',53,story?289:249);
+  ctx.fillStyle='#d7c6e5';ctx.font='650 30px system-ui,sans-serif';
+  ctx.fillText((graphicWeekLabel()+' · '+offsetDate(graphicWeek,6).getFullYear()).toUpperCase(),60,story?364:309);
+  const top=story?430:362,gap=story?18:11,footer=story?215:105,cardH=(H-top-footer-gap*6)/7;
+  const days=['ПН','ВТ','СР','ЧТ','ПТ','СБ','ВС'];
+  for(let i=0;i<7;i++){
+    const date=offsetDate(graphicWeek,i),key=dateToKey(date);
+    const events=sortedStreams(db.streams.filter(s=>s.date===key&&s.status!=='cancelled'));
+    const x=52,y=top+(cardH+gap)*i,w=976;
+    canvasRound(ctx,x,y,w,cardH,25);ctx.fillStyle=i>4?'#382941ec':'#2d243bef';ctx.fill();
+    ctx.lineWidth=2;ctx.strokeStyle='#d2b5de3e';ctx.stroke();
+    canvasRound(ctx,x+14,y+11,140,cardH-22,18);ctx.fillStyle=events.length?'#624164':'#41344a';ctx.fill();
+    ctx.textAlign='center';ctx.fillStyle='#f9c5e2';ctx.font='800 26px system-ui,sans-serif';
+    ctx.fillText(days[i],x+84,y+(story?51:38));
+    ctx.fillStyle='#fff4ff';ctx.font='900 49px system-ui,sans-serif';ctx.fillText(String(date.getDate()),x+84,y+(story?108:86));
+    ctx.textAlign='left';const ox=x+179,maxW=w-210;
+    if(!events.length){
+      ctx.fillStyle='#b9acc7';ctx.font='650 35px system-ui,sans-serif';ctx.fillText('Отдых ✧',ox,y+cardH/2+13);
+    }else if(events.length===1){
+      const ev=events[0];ctx.fillStyle='#ffbcd8';ctx.font='800 31px system-ui,sans-serif';
+      ctx.fillText(ev.time,ox,y+cardH/2-19);
+      ctx.fillStyle='#fff2fd';ctx.font='750 34px system-ui,sans-serif';
+      ctx.fillText(canvasFit(ctx,ev.title,maxW),ox,y+cardH/2+20);
+      ctx.fillStyle='#bdb0cf';ctx.font='500 23px system-ui,sans-serif';
+      ctx.fillText(canvasFit(ctx,ev.game||'Just Chatting',maxW),ox,y+cardH/2+(story?57:48));
+    }else{
+      events.slice(0,2).forEach((ev,j)=>{
+        const yy=y+cardH/2-17+j*(story?47:41);
+        ctx.fillStyle='#ffb6d6';ctx.font='800 29px system-ui,sans-serif';ctx.fillText(ev.time,ox,yy);
+        const tw=ctx.measureText(ev.time).width;
+        ctx.fillStyle='#fff0fa';ctx.font='650 28px system-ui,sans-serif';
+        ctx.fillText(canvasFit(ctx,ev.title,maxW-tw-18),ox+tw+18,yy);
+      });
+      if(events.length>2){ctx.fillStyle='#c6b6d0';ctx.font='500 21px system-ui,sans-serif';ctx.fillText('+ ещё '+(events.length-2),ox,y+cardH-13)}
+    }
+  }
+  ctx.textAlign='left';ctx.fillStyle='#dccce9';ctx.font='700 30px system-ui,sans-serif';ctx.fillText('twitch.tv/lillameee',58,H-(story?103:49));
+  ctx.textAlign='right';ctx.fillStyle='#eab5d6';ctx.font='600 27px system-ui,sans-serif';ctx.fillText('SEE YOU ON STREAM ♡',1022,H-(story?103:49));
+  return c;
+}
+  function refreshGraphic(){
+  const label=document.querySelector('#graphicWeekLabel'),img=document.querySelector('#graphicPreview'),shareBtn=document.querySelector('#graphicShare');
+  if(!label||!img)return;
+  label.textContent=graphicWeekLabel();graphicFile=null;if(shareBtn)shareBtn.disabled=true;
+  const token=++graphicSequence;
+  try{
+    graphicCanvas=makeGraphic();img.src=graphicCanvas.toDataURL('image/png');
+    graphicCanvas.toBlob(blob=>{
+      if(token!==graphicSequence||!blob)return;
+      graphicFile=new File([blob],graphicName(),{type:'image/png'});
+      if(shareBtn)shareBtn.disabled=false;
+    },'image/png');
+  }catch(err){console.error(err);showToast('Не удалось создать картинку')}
+}
+  function downloadGraphic(){
+  if(!graphicCanvas)return;
+  const a=document.createElement('a');a.href=graphicCanvas.toDataURL('image/png');a.download=graphicName();
+  document.body.append(a);a.click();a.remove();showToast('Расписание готово ♡');
+}
+  async function shareGraphic(){
+  if(!graphicFile){showToast('Картинка ещё готовится');return}
+  try{
+    if(navigator.share&&navigator.canShare?.({files:[graphicFile]}))await navigator.share({files:[graphicFile],title:'Расписание стримов'});
+    else downloadGraphic();
+  }catch(err){if(err?.name!=='AbortError')showToast('Попробуй «Скачать PNG»')}
+}
+  function settings(){sheet('Настройки ⚙',`<div class="card settings-row"><div class="settings-title">Резервная копия</div><p>Все записи хранятся на этом устройстве в браузере, а не в облаке. Регулярно сохраняй копию, чтобы не потерять данные при очистке Safari или смене iPhone.</p><div class="settings-actions"><button type="button" class="outlined" data-action="export">↓ Скачать JSON</button><button type="button" class="outlined" data-action="import">↑ Восстановить</button></div><input type="file" id="importFile" class="file-input" accept=".json,application/json"></div><div class="card settings-row"><div class="settings-title">На экран «Домой»</div><p>Открой опубликованный сайт в Safari, нажми «Поделиться» → «На экран Домой». Сайт будет выглядеть как отдельное приложение. После установки используй его в одном и том же режиме, чтобы записи оставались вместе.</p></div><div class="card settings-row"><div class="settings-title">О проекте</div><p>Lilla Plan — личный планер стримов, идей и заметок. Версия 1.3 · Работает без регистрации.</p></div>`)}
   function exportData(){
     const data=JSON.stringify({version:2,exportedAt:new Date().toISOString(),streams:db.streams,notes:db.notes,ideas:db.ideas},null,2);
     const blob=new Blob([data],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`lilla-plan-${todayKey()}.json`;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);showToast('Копия готова ♡');
@@ -320,6 +446,7 @@
     if(target.dataset.nav){nav(target.dataset.nav);return}
     if(target.dataset.month){shownMonth=new Date(shownMonth.getFullYear(),shownMonth.getMonth()+Number(target.dataset.month),1);selectedDate=dateToKey(new Date(shownMonth.getFullYear(),shownMonth.getMonth(),1));render();return}
     if(target.dataset.day){selectedDate=target.dataset.day;const d=parseDate(selectedDate);shownMonth=new Date(d.getFullYear(),d.getMonth(),1);render();return}
+     if(target.dataset.graphicWeek){graphicWeek=offsetDate(graphicWeek,Number(target.dataset.graphicWeek)*7);refreshGraphic();return}
     if(target.dataset.editStream){streamForm(target.dataset.editStream);return}
     if(target.dataset.editNote){noteForm(target.dataset.editNote);return}
     if(target.dataset.editIdea){ideaForm(target.dataset.editIdea);return}
@@ -329,7 +456,7 @@
     if(target.dataset.deleteStream){if(confirm('Удалить этот стрим?')){db.streams=db.streams.filter(s=>s.id!==target.dataset.deleteStream);saved();closeSheet();showToast('Стрим удалён')}return}
     if(target.dataset.deleteNote){if(confirm('Удалить эту заметку?')){db.notes=db.notes.filter(n=>n.id!==target.dataset.deleteNote);saved();closeSheet();showToast('Заметка удалена')}return}
     if(target.dataset.deleteIdea){if(confirm('Удалить эту идею? Запланированные стримы сохранятся.')){db.ideas=db.ideas.filter(i=>i.id!==target.dataset.deleteIdea);saved();closeSheet();showToast('Идея удалена')}return}
-    switch(target.dataset.action){case 'choose':choose();break;case 'add-stream':streamForm();break;case 'add-note':noteForm();break;case 'add-idea':ideaForm();break;case 'export':exportData();break;case 'import':document.querySelector('#importFile')?.click();break}
+    switch(target.dataset.action){case 'choose':choose();break;case 'add-stream':streamForm();break;case 'add-note':noteForm();break;case 'add-idea':ideaForm();break;case 'weekly-image':showGraphic();break;case 'graphic-download':downloadGraphic();break;case 'graphic-share':shareGraphic();break;case 'export':exportData();break;case 'import':document.querySelector('#importFile')?.click();break}
   });
   document.addEventListener('submit',e=>{
     if(e.target.id==='streamForm'){
@@ -369,7 +496,8 @@
       if(task){task.done=e.target.checked;idea.updatedAt=new Date().toISOString();saved();showToast(task.done?'Пункт выполнен ✨':'Пункт снова в списке')}
       return;
     }
-    if(e.target.id!=='importFile')return;
+    if(e.target.id==='graphicFormat'){graphicFormat=e.target.value==='story'?'story':'post';refreshGraphic();return}
+     if(e.target.id!=='importFile')return;
     const file=e.target.files?.[0];if(!file)return;
     try{
       if(file.size>8*1024*1024)throw new Error('Слишком большой файл');
