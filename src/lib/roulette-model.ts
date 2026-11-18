@@ -14,7 +14,11 @@ export type DrawBag={pool:string[];remaining:string[];last:string|null};
 export type DrawHistory=Record<string,DrawBag>;
 export function validHistory(x:unknown):x is DrawHistory{
  if(!x||typeof x!=='object'||Array.isArray(x)||Object.keys(x).length>24)return false;
- return Object.values(x).every(b=>b&&typeof b==='object'&&Array.isArray(b.pool)&&b.pool.length<=10000&&b.pool.every((id:unknown)=>typeof id==='string')&&new Set(b.pool).size===b.pool.length&&Array.isArray(b.remaining)&&b.remaining.every((id:unknown)=>typeof id==='string'&&b.pool.includes(id))&&new Set(b.remaining).size===b.remaining.length&&(b.last===null||typeof b.last==='string'&&b.pool.includes(b.last)));
+ return Object.values(x).every(b=>{
+  if(!b||typeof b!=='object'||!Array.isArray(b.pool)||b.pool.length>10000||!b.pool.every((id:unknown)=>typeof id==='string')||!Array.isArray(b.remaining))return false;
+  const ids=new Set(b.pool);
+  return ids.size===b.pool.length&&b.remaining.length<=b.pool.length&&b.remaining.every((id:unknown)=>typeof id==='string'&&ids.has(id))&&new Set(b.remaining).size===b.remaining.length&&(b.last===null||typeof b.last==='string'&&ids.has(b.last));
+ });
 }
 // A saved bag identifies the pool by IDs, so catalog reordering cannot reset a cycle.
 export function drawWithoutRepeats(ids:string[],previous?:DrawBag,random:(n:number)=>number=randomIndex){
@@ -29,8 +33,13 @@ export function drawWithoutRepeats(ids:string[],previous?:DrawBag,random:(n:numb
 export function rememberDraw(history:DrawHistory,key:string,bag:DrawBag):DrawHistory{
  return Object.fromEntries([...Object.entries(history).filter(([k])=>k!==key).slice(-23),[key,bag]]);
 }
+export function sampleItems<T>(items:T[],count:number,random:(n:number)=>number=randomIndex){
+ const bag=[...items],result:T[]=[];
+ for(let i=0;i<Math.min(count,items.length);i++){const j=random(bag.length);result.push(bag[j]);bag[j]=bag[bag.length-1];bag.pop();}
+ return result;
+}
 export function makeReel<T>(pool:T[],winner:T,length=36,winningIndex=32){
  if(!pool.length||winningIndex<0||winningIndex>=length)throw new Error('Invalid roulette reel');
- const strip:T[]=[];while(strip.length<length)strip.push(...shuffleItems(pool));
+ const strip:T[]=[];while(strip.length<length)strip.push(...sampleItems(pool,length-strip.length));
  strip.length=length;strip[winningIndex]=winner;return strip;
 }

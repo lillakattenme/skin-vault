@@ -3,7 +3,7 @@ const demoRows:Selection[]=snapshot.skins.filter(s=>s.origin==='store'&&['Vandal
 import { database } from './supabase';
 import { getCatalog } from './catalog';
 import type {Selection} from './types';
-async function selections(guest:boolean){let query=database().from('skin_selections').select('skin_id,owned,wished,price_override');if(guest)query=query.or('owned.eq.true,wished.eq.true');const {data,error}=await query;if(error)throw error;return (data??[]).map(r=>({skinId:r.skin_id,owned:r.owned,wished:r.wished,priceOverride:r.price_override})) as Selection[];}
+async function selections(guest:boolean){let query=database().from('skin_selections').select('skin_id,owned,wished,price_override');if(guest)query=query.or('owned.eq.true,wished.eq.true');const {data,error}=await query.abortSignal(AbortSignal.timeout(10000));if(error)throw error;return (data??[]).map(r=>({skinId:r.skin_id,owned:r.owned,wished:r.wished,priceOverride:r.price_override})) as Selection[];}
 export async function apiRequest(path:string,init?:RequestInit):Promise<Response>{try{
  let payload:unknown;
  if(import.meta.env.VITE_DEMO==='true'){
@@ -12,7 +12,7 @@ export async function apiRequest(path:string,init?:RequestInit):Promise<Response
  }
 
  if(path.startsWith('/api/catalog'))payload=await getCatalog(path.includes('refresh=1'));
- else if(path==='/api/public'){const [rows,catalog]=await Promise.all([selections(true),getCatalog()]);payload={selections:rows,catalog};}
+ else if(path==='/api/public')payload={selections:await selections(true)};
  else if(path==='/api/collection'&&(!init?.method||init.method==='GET'))payload={selections:await selections(false)};
  else if(path==='/api/collection'&&init?.method==='PUT'){const x=JSON.parse(String(init.body));const {error}=await database().rpc('set_skin_selection',{p_skin_id:x.skinId,p_owned:x.owned,p_wished:x.wished});if(error)throw error;payload={ok:true};}
  else if(path==='/api/prices'&&init?.method==='PUT'){const x=JSON.parse(String(init.body));const {error}=await database().rpc('set_skin_price',{p_skin_id:x.skinId,p_price:x.price});if(error)throw error;payload={ok:true};}

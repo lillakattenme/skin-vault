@@ -1,7 +1,7 @@
-import React,{useEffect,useRef,useState} from 'react';
+import React,{lazy,Suspense,useEffect,useRef,useState} from 'react';
 import {createRoot} from 'react-dom/client';
 import {LoaderCircle,LogOut} from 'lucide-react';
-import SkinVault from './SkinVault';
+const SkinVault=lazy(()=>import('./SkinVault'));
 import {configured,guestUrl,supabaseUrl} from './lib/config';
 import {initialRecovery,markRecovery,passwordProblem,pendingRecovery,recoveryRedirect,recoveryToken} from './lib/recovery';
 import {supabase} from './lib/supabase';
@@ -92,4 +92,4 @@ function App(){
  return <main className="access-denied"><form className="login-panel" onSubmit={login}><p className="eyebrow">DreamSkin</p><h1>Вход владельца</h1><label>Почта<input type="email" autoComplete="username" required value={email} onChange={e=>setEmail(e.target.value)}/></label><label>Пароль<input type="password" autoComplete="current-password" required value={password} onChange={e=>setPassword(e.target.value)}/></label>{error&&<p role="alert" className="dialog-error">{error}</p>}<button className="primary" disabled={busy}>{busy?'Входим…':'Войти'}</button><button type="button" className="text-button" disabled={busy} onClick={()=>changeFlow('forgot')}>Забыли пароль?</button><a href={guestUrl()}>Открыть гостевой режим</a></form></main>;
 }
 function Demo(){const [viewer,setViewer]=useState(guest);return <><div className="demo-banner"><span><strong>ТЕСТОВАЯ ВЕРСИЯ</strong> · Демонстрационные данные. Основная коллекция не меняется.</span><button className="secondary" onClick={()=>setViewer(v=>!v)}>{viewer?'Перейти к владельцу':'Посмотреть глазами зрителя'}</button></div><SkinVault key={String(viewer)} guest={viewer}/></>;}
-createRoot(document.getElementById('root')!).render(<React.StrictMode>{import.meta.env.VITE_DEMO==='true'?<Demo/>:<App/>}</React.StrictMode>);
+createRoot(document.getElementById('root')!).render(<React.StrictMode><Suspense fallback={<main className="access-denied"><LoaderCircle className="rotate"/><p>Загружаем DreamSkin…</p></main>}>{import.meta.env.VITE_DEMO==='true'?<Demo/>:<App/>}</Suspense></React.StrictMode>);
